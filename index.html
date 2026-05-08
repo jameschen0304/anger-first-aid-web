@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#f3fbf7" />
+  <title>吵架急救助手</title>
+  <style>
+    :root { --bg:#f3fbf7; --surface:#fff; --text:#2a453a; --muted:#5c8f78; --line:rgba(100,190,145,.28); --good:#2eb86c; --gold:#9bc44a; --ghost:#edf8f2; --radius:18px; }
+    * { box-sizing:border-box; } body { margin:0; font-family:"Noto Sans SC",system-ui,-apple-system,sans-serif; background:var(--bg); color:var(--text); line-height:1.6; }
+    .app { max-width:760px; margin:0 auto; padding:20px 14px 40px; } header { text-align:center; margin-bottom:14px; } h1 { margin:0; font-size:1.55rem; }
+    .subtitle { color:var(--muted); font-size:.9rem; margin-top:6px; } .card { background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:14px; margin-bottom:12px; }
+    .title { font-weight:700; margin-bottom:8px; } .help { color:var(--muted); font-size:.9rem; } label { font-size:.86rem; color:var(--muted); display:block; margin-bottom:4px; }
+    input,textarea,select { width:100%; border:1px solid var(--line); border-radius:12px; padding:10px 11px; font:inherit; background:#fff; color:var(--text); }
+    textarea { min-height:84px; resize:vertical; } .row { display:grid; grid-template-columns:1fr 1fr; gap:8px; } .toolbar { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+    button { border:1px solid transparent; border-radius:999px; padding:9px 14px; font:inherit; font-weight:600; cursor:pointer; }
+    .btn-good { background:var(--good); color:#fff; } .btn-gold { background:var(--gold); color:#fff; } .btn-ghost { background:var(--ghost); color:var(--text); border-color:var(--line); }
+    .btn-sm { font-size:.85rem; padding:7px 11px; } .timer { font-weight:800; font-size:1.8rem; text-align:center; margin-top:8px; }
+    .chips { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; } .chips .active { background:var(--good); color:#fff; border-color:var(--good); }
+    .toast { position:fixed; left:50%; bottom:18px; transform:translateX(-50%); border-radius:999px; padding:10px 14px; background:rgba(26,78,57,.94); color:#fff; opacity:0; pointer-events:none; transition:opacity .2s; font-size:.88rem; max-width:calc(100vw - 20px); text-align:center; }
+    .toast.show { opacity:1; } @media (max-width:620px){ .row{grid-template-columns:1fr;} }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header><h1>吵架急救助手</h1><div class="subtitle">单页版 · 本地运行 · 先冷静再沟通</div></header>
+    <section class="card"><div class="title">基础信息</div><div class="row"><div><label for="wifeName">对方称呼</label><input id="wifeName" type="text" maxlength="10" value="老婆" /></div><div><label for="issueType">问题类型</label><select id="issueType"><option value="housework">家务与分工</option><option value="money">金钱/消费</option><option value="time">时间与陪伴</option><option value="communication">沟通方式/语气</option><option value="other" selected>其他</option></select></div></div></section>
+    <section class="card"><div class="title">第 1 步：先把自己按住</div><div class="help">先暂停 20 秒。目标不是赢，是让彼此更安全地说话。</div><div class="toolbar"><button class="btn-good" id="startBreath">开始急救（20 秒）</button><button class="btn-ghost" id="skipBreath">我已经冷静了</button></div><div id="breathBox" hidden><div id="timer" class="timer">20 秒</div><div class="help" id="breathText" style="text-align:center;">吸气…停 1 秒…呼气…再来一次</div></div></section>
+    <section class="card"><div class="title">第 2 步：认真倾听（先复述）</div><label for="listenInput">她刚才说了什么（原话/关键词）</label><textarea id="listenInput"></textarea><div class="toolbar"><button class="btn-good" id="genListen">生成倾听话术</button><button class="btn-ghost btn-sm" id="copyListen">复制</button></div><textarea id="listenOutput" readonly placeholder="点击上方生成..."></textarea></section>
+    <section class="card"><div class="title">第 3 步：非暴力沟通（NVC）</div><label for="obs">观察（事实）</label><textarea id="obs"></textarea><div class="row"><div><label for="feel">感受</label><input id="feel" type="text" maxlength="20" /></div><div><label for="need">需要</label><input id="need" type="text" maxlength="20" /></div></div><label for="request">请求（具体）</label><textarea id="request"></textarea><div class="toolbar"><button class="btn-good" id="genNvc">生成 NVC 话术</button><button class="btn-ghost btn-sm" id="copyNvc">复制</button></div><textarea id="nvcOutput" readonly placeholder="点击上方生成..."></textarea></section>
+    <section class="card"><div class="title">第 4 步：关键对话（变成方案）</div><label for="concern">我真正担心的是什么</label><textarea id="concern"></textarea><label for="desired">我希望达成什么结果</label><textarea id="desired"></textarea><div class="toolbar"><button class="btn-good" id="genDialogue">生成关键对话方案</button><button class="btn-ghost btn-sm" id="copyDialogue">复制</button></div><textarea id="dialogueOutput" readonly placeholder="点击上方生成..."></textarea></section>
+    <section class="card"><div class="title">第 5 步：小笑话降温</div><div class="toolbar"><button class="btn-gold" id="nextJoke">再来一个笑点</button><button class="btn-ghost btn-sm" id="copyJoke">复制</button></div><textarea id="jokeOutput" readonly placeholder="点击上方按钮..."></textarea></section>
+    <section class="card"><div class="title">第 6 步：甜甜收尾</div><div class="help">先选一个收尾方向：</div><div class="chips" id="giftKinds"><button type="button" class="btn-ghost btn-sm active" data-kind="milkTea">奶茶</button><button type="button" class="btn-ghost btn-sm" data-kind="dessert">甜点</button><button type="button" class="btn-ghost btn-sm" data-kind="smallGift">小礼物</button><button type="button" class="btn-ghost btn-sm" data-kind="note">手写便条</button></div><div class="toolbar"><button class="btn-good" id="genGift">生成收尾话术</button><button class="btn-ghost btn-sm" id="copyGift">复制</button></div><textarea id="giftOutput" readonly placeholder="点击上方生成..."></textarea></section>
+    <section class="card"><div class="title">一键生成：完整收尾话术</div><div class="toolbar"><button class="btn-good" id="genFinal">生成完整话术</button><button class="btn-ghost btn-sm" id="copyFinal">复制</button></div><textarea id="finalOutput" readonly placeholder="点击上方生成..."></textarea><div class="help">安全提醒：如果你觉得自己快要失控，先离开现场，寻求可信赖的人或专业帮助。</div></section>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script>
+    const el = (id) => document.getElementById(id); const wifeName = () => (el("wifeName").value || "老婆").trim() || "老婆";
+    let timerHandle = null, left = 0, selectedKind = "milkTea", lastJoke = -1;
+    function toast(msg, ms = 2200) { const t = el("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toast._timer); if (ms > 0) toast._timer = setTimeout(() => t.classList.remove("show"), ms); }
+    async function copyText(v) { const txt = String(v || "").trim(); if (!txt) return toast("没有可复制内容"); try { await navigator.clipboard.writeText(txt); toast("已复制"); } catch { toast("复制失败，请手动复制"); } }
+    const normalizeText = (s) => String(s || "").trim();
+    function inferSoftFeeling(text) { const t = String(text || ""); const has = (arr) => arr.some((x) => t.includes(x)); if (has(["委屈","难过","受伤"])) return "你一定很委屈/难过"; if (has(["生气","愤怒","火大"])) return "你可能有点生气、气不过"; if (has(["失望","无奈"])) return "你可能很失望、也很无奈"; if (has(["不理解","听不见"])) return "你觉得我没有真正理解你"; return "你在认真表达你的感受"; }
+    function inferNeed(text, issueType) { const t = String(text || ""); const has = (arr) => arr.some((x) => t.includes(x)); if (issueType === "housework" || has(["家务","分工"])) return "公平分工与被看见的努力"; if (issueType === "money" || has(["钱","消费"])) return "安全感与透明沟通"; if (issueType === "time" || has(["陪伴","时间"])) return "陪伴与被优先考虑"; if (issueType === "communication" || has(["语气","打断"])) return "被尊重与好好说话的方式"; return "被理解、一起把事情解决掉"; }
+    function issueSuggestions(issueType) { if (issueType === "housework") return ["今晚先做一个 10 分钟小任务","把家务拆成清单 + 轮换","约定暂停信号，30 分钟后再聊"]; if (issueType === "money") return ["先暂停大额消费","约定每周预算","讨论时只谈事实与下一步"]; if (issueType === "time") return ["约 20 分钟无手机陪伴","今晚/明天选一个固定时段","忙时先报备可用时间"]; if (issueType === "communication") return ["先说感受，再说请求","每次只提一个问题","轮流用 NVC 说一遍"]; return ["先聚焦事实，别贴标签","各说最在意的一点","今晚定一个可执行小行动"]; }
+    function giftKindInfo(kind) { if (kind === "dessert") return { label: "甜点", reason: "让你先笑一下，再一起解决问题" }; if (kind === "smallGift") return { label: "小礼物", reason: "我想让你感到：我在乎你，也在学习好好爱你" }; if (kind === "note") return { label: "手写便条", reason: "用文字把我的道歉和感谢说清楚" }; return { label: "奶茶", reason: "想用甜甜的方式把你的小委屈慢慢化开" }; }
+    function generateListenScript(raw) { const t = normalizeText(raw); if (!t) return ""; const feeling = inferSoftFeeling(t), need = inferNeed(t, el("issueType").value); return [`${wifeName()}，谢谢你愿意说出来。`,`我理解你刚才说的主要内容是：${t}。`,`我也感受到：${feeling}。`,`我猜你的需要可能是：${need}。`,"我理解对了吗？你希望我先做哪一件？"].join("\n"); }
+    function generateNvcScript() { const obs = normalizeText(el("obs").value); if (!obs) return ""; const feel = normalizeText(el("feel").value) || "有点不舒服/紧张", need = normalizeText(el("need").value) || "被理解与安全地沟通", req = normalizeText(el("request").value) || "先暂停 10 分钟，再一起找下一步。"; return [`${wifeName()}，我想用 NVC 再说一次：`,`观察：${obs}`,`感受：当发生这件事，我感到${feel}`,`需要：我需要${need}`,`请求：我希望你能${req}`].join("\n"); }
+    function generateDialogueScript() { const concern = normalizeText(el("concern").value) || "我们越吵越远，但我更希望我们能靠近。", desired = normalizeText(el("desired").value) || "把问题说清楚，并约定下一步。"; const ss = issueSuggestions(el("issueType").value); return [`${wifeName()}，我想让我们把这次吵架变成“下一步”。`,`我真正担心的是：${concern}`,`我希望达成的结果是：${desired}`,"我建议：先复述 -> 再表达需要 -> 最后选一个今晚就能做的小行动。",`- ${ss[0]}`,`- ${ss[1]}`,`- ${ss[2]}`].join("\n"); }
+    function generateGiftScript() { const info = giftKindInfo(selectedKind); return [`最后的小惊喜我想送你：${info.label}。`,`因为：${info.reason}。`,"如果你愿意，我们就从今天一个小步骤开始。"].join("\n"); }
+    const jokes = ["如果吵架是游戏，那我现在选择：暂停，重新开始，选“认真听你说”。","我不是要赢你，我是要抱你这边。","我刚才想当理性男，现在切换成哄哄模式。","情侣升级包已更新：V1.0 认真倾听，V2.0 甜甜收尾。"];
+    function nextJoke() { let i = Math.floor(Math.random() * jokes.length); if (jokes.length > 1 && i === lastJoke) i = (i + 1) % jokes.length; lastJoke = i; el("jokeOutput").value = jokes[i]; }
+    function startBreath(seconds = 20) { if (timerHandle) return; left = seconds; el("startBreath").disabled = true; el("breathBox").hidden = false; el("timer").textContent = `${left} 秒`; el("breathText").textContent = "吸气…停 1 秒…呼气…再来一次"; timerHandle = setInterval(() => { left -= 1; if (left <= 0) { clearInterval(timerHandle); timerHandle = null; el("startBreath").disabled = false; el("timer").textContent = "0 秒"; el("breathText").textContent = "完成！现在进入第 2 步：先复述，不反驳。"; toast("急救完成：开始倾听与复述"); return; } el("timer").textContent = `${left} 秒`; }, 1000); }
+    function stopBreath() { clearInterval(timerHandle); timerHandle = null; el("startBreath").disabled = false; el("breathBox").hidden = true; toast("好的，我们开始复述与沟通"); }
+    el("startBreath").addEventListener("click", () => startBreath(20)); el("skipBreath").addEventListener("click", stopBreath);
+    el("genListen").addEventListener("click", () => { const out = generateListenScript(el("listenInput").value); if (!out) return toast("先填一下她说了什么"); el("listenOutput").value = out; toast("已生成倾听话术"); });
+    el("copyListen").addEventListener("click", () => copyText(el("listenOutput").value)); el("genNvc").addEventListener("click", () => { const out = generateNvcScript(); if (!out) return toast("请先填写“观察（事实）”"); el("nvcOutput").value = out; toast("已生成 NVC 话术"); });
+    el("copyNvc").addEventListener("click", () => copyText(el("nvcOutput").value)); el("genDialogue").addEventListener("click", () => { el("dialogueOutput").value = generateDialogueScript(); toast("已生成关键对话方案"); });
+    el("copyDialogue").addEventListener("click", () => copyText(el("dialogueOutput").value)); el("nextJoke").addEventListener("click", () => { nextJoke(); toast("笑点已准备好"); }); el("copyJoke").addEventListener("click", () => copyText(el("jokeOutput").value));
+    document.querySelectorAll("#giftKinds button").forEach((btn) => { btn.addEventListener("click", () => { selectedKind = btn.dataset.kind || "milkTea"; document.querySelectorAll("#giftKinds button").forEach((b) => b.classList.remove("active")); btn.classList.add("active"); el("giftOutput").value = ""; }); });
+    el("genGift").addEventListener("click", () => { el("giftOutput").value = generateGiftScript(); toast("收尾话术已生成"); }); el("copyGift").addEventListener("click", () => copyText(el("giftOutput").value));
+    el("genFinal").addEventListener("click", () => { const parts = []; const listen = normalizeText(el("listenOutput").value), nvc = normalizeText(el("nvcOutput").value), dialogue = normalizeText(el("dialogueOutput").value), joke = normalizeText(el("jokeOutput").value), gift = normalizeText(el("giftOutput").value || generateGiftScript()); parts.push(`${wifeName()}，先暂停一下。我在认真听你，也会用更温柔的方式解决问题。`); if (listen) parts.push(listen); if (nvc) parts.push(`\n（非暴力沟通 NVC）\n${nvc}`); if (dialogue) parts.push(`\n（关键对话）\n${dialogue}`); if (joke) parts.push(`\n给你一个小笑话：\n${joke}`); if (gift) parts.push(`\n最后的小惊喜：\n${gift}`); parts.push("\n我们先从你愿意的那个下一步开始。"); el("finalOutput").value = parts.join("\n"); toast("完整话术已生成"); });
+    el("copyFinal").addEventListener("click", () => copyText(el("finalOutput").value)); nextJoke(); el("giftOutput").value = generateGiftScript();
+  </script>
+</body>
+</html>
